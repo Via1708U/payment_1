@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MISSPAY — Your Money. Our Rules.</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -12,43 +12,36 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #F0ECFF 0%, #E2D9FF 50%, #D5C8FF 100%);
+      background: linear-gradient(135deg, #F0ECFF 0%, #E5DCFF 50%, #D9CEFF 100%);
       color: #171936;
       margin: 0;
       padding: 0;
+      min-height: 100vh;
       -webkit-tap-highlight-color: transparent;
     }
     @keyframes scanline {
-      0% { top: 8%; opacity: 0.2; }
-      50% { top: 88%; opacity: 0.9; }
-      100% { top: 8%; opacity: 0.2; }
+      0% { top: 8%; opacity: 0.25; }
+      50% { top: 88%; opacity: 0.95; }
+      100% { top: 8%; opacity: 0.25; }
     }
     .animate-scan {
       animation: scanline 2.4s ease-in-out infinite;
     }
     @keyframes fadeSlide {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .page-enter {
-      animation: fadeSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+      animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-0 sm:p-6">
-  <div id="root" class="w-full flex justify-center"></div>
+<body class="min-h-screen flex flex-col">
+  <div id="root" class="flex-1 flex flex-col"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // --- Inline SVG Icons (Zero external icon dependency failures) ---
     const Icon = ({ name, className = "w-5 h-5" }) => {
       const icons = {
         arrowLeft: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />,
@@ -73,9 +66,8 @@
       );
     };
 
-    // --- Brand Logo ---
     const MisspayLogo = ({ size = "md" }) => {
-      const box = size === "lg" ? "w-12 h-12 rounded-2xl text-2xl" : "w-9 h-9 rounded-xl text-lg";
+      const box = size === "lg" ? "w-11 h-11 rounded-2xl text-xl" : "w-9 h-9 rounded-xl text-lg";
       const text = size === "lg" ? "text-2xl" : "text-lg";
       return (
         <div className="flex items-center gap-2.5 select-none">
@@ -86,64 +78,61 @@
             <span className={`${text} font-extrabold tracking-tight text-[#171936] leading-none`}>
               MISSPAY
             </span>
-            {size === "lg" && (
-              <span className="text-[11px] font-medium text-[#7250D5] tracking-wide mt-0.5">
-                Your Money. Our Rules.
-              </span>
-            )}
+            <span className="text-[11px] font-medium text-[#7250D5] tracking-wide mt-0.5">
+              Your Money. Our Rules.
+            </span>
           </div>
         </div>
       );
     };
 
-    // --- CAPTCHA Data (3 Rounds with distinct visual SVG tiles + target verification) ---
     const CAPTCHA_ROUNDS = [
       {
         round: 1,
         prompt: "Select all images with traffic lights.",
-        hint: "Look closely at tiles #2, #5, and #8.",
+        hint: "Select tiles #2, #5, and #8.",
         tiles: [
-          { id: 0, isTarget: false, type: "tree", label: "Oak Tree" },
-          { id: 1, isTarget: true, type: "traffic", label: "Signal A" },
-          { id: 2, isTarget: false, type: "cloud", label: "Overcast" },
-          { id: 3, isTarget: false, type: "building", label: "Tower" },
-          { id: 4, isTarget: true, type: "traffic", label: "Signal B" },
-          { id: 5, isTarget: false, type: "hydrant", label: "Hydrant" },
-          { id: 6, isTarget: false, type: "tree", label: "Park" },
-          { id: 7, isTarget: true, type: "traffic", label: "Signal C" },
-          { id: 8, isTarget: false, type: "building", label: "Office" }
+          { id: 0, isTarget: false, type: "tree" },
+          { id: 1, isTarget: true, type: "traffic" },
+          { id: 2, isTarget: false, type: "cloud" },
+          { id: 3, isTarget: false, type: "building" },
+          { id: 4, isTarget: true, type: "traffic" },
+          { id: 5, isTarget: false, type: "hydrant" },
+          { id: 6, isTarget: false, type: "tree" },
+          { id: 7, isTarget: true, type: "traffic" },
+          { id: 8, isTarget: false, type: "building" }
         ]
       },
       {
         round: 2,
         prompt: "Select all images with crosswalks.",
-        hint: "Select the 3 striped pedestrian crossings (#1, #6, #7).",
+        hint: "Select tiles #1, #6, and #7.",
         tiles: [
-          { id: 0, isTarget: true, type: "crosswalk", label: "Zebra A" },
-          { id: 1, isTarget: false, type: "road", label: "Asphalt" },
-          { id: 2, isTarget: false, type: "tree", label: "Foliage" },
-          { id: 3, isTarget: false, type: "cloud", label: "Sky" },
-          { id: 4, isTarget: false, type: "building", label: "Facade" },
-          { id: 5, isTarget: true, type: "crosswalk", label: "Zebra B" },
-          { id: 6, isTarget: true, type: "crosswalk", label: "Zebra C" },
-          { id: 7, isTarget: false, type: "road", label: "Highway" },
-          { id: 8, isTarget: false, type: "hydrant", label: "Curb" }
+          { id: 0, isTarget: true, type: "crosswalk" },
+          { id: 1, isTarget: false, type: "road" },
+          { id: 2, isTarget: false, type: "tree" },
+          { id: 3, isTarget: false, type: "cloud" },
+          { id: 4, isTarget: false, type: "building" },
+          { id: 5, isTarget: true, type: "crosswalk" },
+          { id: 6, isTarget: true, type: "crosswalk" },
+          { id: 7, isTarget: false, type: "road" },
+          { id: 8, isTarget: false, type: "hydrant" }
         ]
       },
       {
         round: 3,
         prompt: "Select all images with buses.",
-        hint: "Select the 3 transit buses (#3, #4, #9).",
+        hint: "Select tiles #3, #4, and #9.",
         tiles: [
-          { id: 0, isTarget: false, type: "car", label: "Sedan" },
-          { id: 1, isTarget: false, type: "building", label: "Station" },
-          { id: 2, isTarget: true, type: "bus", label: "Metro Bus 1" },
-          { id: 3, isTarget: true, type: "bus", label: "City Coach" },
-          { id: 4, isTarget: false, type: "car", label: "Coupe" },
-          { id: 5, isTarget: false, type: "tree", label: "Boulevard" },
-          { id: 6, isTarget: false, type: "road", label: "Lane" },
-          { id: 7, isTarget: false, type: "car", label: "Compact" },
-          { id: 8, isTarget: true, type: "bus", label: "Shuttle Bus" }
+          { id: 0, isTarget: false, type: "car" },
+          { id: 1, isTarget: false, type: "building" },
+          { id: 2, isTarget: true, type: "bus" },
+          { id: 3, isTarget: true, type: "bus" },
+          { id: 4, isTarget: false, type: "car" },
+          { id: 5, isTarget: false, type: "tree" },
+          { id: 6, isTarget: false, type: "road" },
+          { id: 7, isTarget: false, type: "car" },
+          { id: 8, isTarget: true, type: "bus" }
         ]
       }
     ];
@@ -255,38 +244,32 @@
     ];
 
     function App() {
-      // Navigation & Global Flow State
-      const [page, setPage] = useState("home"); // home | method | amount | password | captcha | face | processing | success | receipt | history | profile
+      const [page, setPage] = useState("home");
       const [selectedMethod, setSelectedMethod] = useState(null);
       const [amount, setAmount] = useState("59.90");
       const [amountError, setAmountError] = useState("");
 
-      // Password State (Randomized Keypad)
       const [shuffledDigits, setShuffledDigits] = useState([]);
       const [pinInput, setPinInput] = useState("");
       const [pinError, setPinError] = useState(false);
 
-      // CAPTCHA State
-      const [captchaRound, setCaptchaRound] = useState(0); // 0, 1, 2
+      const [captchaRound, setCaptchaRound] = useState(0);
       const [selectedTiles, setSelectedTiles] = useState([]);
       const [captchaError, setCaptchaError] = useState("");
 
-      // Real-User Camera / Face Verification State
       const videoRef = useRef(null);
       const streamRef = useRef(null);
       const [cameraActive, setCameraActive] = useState(false);
       const [cameraFallback, setCameraFallback] = useState(false);
       const [faceAttempts, setFaceAttempts] = useState(0);
       const [faceStatus, setFaceStatus] = useState("Ready to scan your face");
-      const [faceStatusType, setFaceStatusType] = useState("idle"); // idle | scanning | error | success
+      const [faceStatusType, setFaceStatusType] = useState("idle");
       const [faceOffset, setFaceOffset] = useState({ x: 0, y: 0 });
 
-      // 30-Second Mandatory Processing State
       const [secondsLeft, setSecondsLeft] = useState(30);
       const [isSubmittingTx, setIsSubmittingTx] = useState(false);
       const [latestTx, setLatestTx] = useState(null);
 
-      // Persistent Transaction History
       const [transactions, setTransactions] = useState(() => {
         try {
           const saved = localStorage.getItem("misspay_transactions_v1");
@@ -302,7 +285,6 @@
         } catch {}
       }, [transactions]);
 
-      // Helper: Shuffle digits 0-9
       const shuffleKeypad = () => {
         const arr = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         for (let i = arr.length - 1; i > 0; i--) {
@@ -312,7 +294,6 @@
         setShuffledDigits(arr);
       };
 
-      // Stop Webcam cleanly
       const stopWebcam = () => {
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((t) => t.stop());
@@ -321,7 +302,6 @@
         setCameraActive(false);
       };
 
-      // Reset uncompleted payment flow completely
       const resetPaymentFlow = (targetPage = "home") => {
         stopWebcam();
         setSelectedMethod(null);
@@ -342,7 +322,6 @@
         setPage(targetPage);
       };
 
-      // Start Checkout from Home (optionally pre-selecting method if clicked directly)
       const startCheckout = (preselectedMethodId = null) => {
         resetPaymentFlow("method");
         if (preselectedMethodId) {
@@ -350,7 +329,6 @@
         }
       };
 
-      // Password keypad handlers
       useEffect(() => {
         if (page === "password") {
           shuffleKeypad();
@@ -377,13 +355,12 @@
             setTimeout(() => {
               setPinError(true);
               setPinInput("");
-              shuffleKeypad(); // Re-shuffle on every failed attempt!
+              shuffleKeypad();
             }, 300);
           }
         }
       };
 
-      // CAPTCHA handlers
       const toggleTile = (idx) => {
         setCaptchaError("");
         setSelectedTiles((prev) =>
@@ -404,7 +381,7 @@
           targetIndices.every((val, index) => val === userIndices[index]);
 
         if (!isMatch) {
-          setCaptchaError("Verification failed. Please select ALL matching squares and try again.");
+          setCaptchaError("Verification failed. Select ALL matching images and try again.");
           return;
         }
 
@@ -417,7 +394,6 @@
         }
       };
 
-      // Real Webcam Initialization when entering Face Verification Page
       useEffect(() => {
         if (page !== "face") {
           stopWebcam();
@@ -444,12 +420,12 @@
             }
             setCameraActive(true);
             setCameraFallback(false);
-            setFaceStatus("Live camera connected. Center your face in the oval.");
-          } catch (err) {
+            setFaceStatus("Live camera connected. Center your face inside the frame.");
+          } catch {
             if (!cancelled) {
               setCameraFallback(true);
               setCameraActive(false);
-              setFaceStatus("Camera permission denied or unavailable. Interactive demo mode enabled.");
+              setFaceStatus("Camera permission denied or unavailable. Fallback mode active.");
             }
           }
         };
@@ -461,27 +437,25 @@
         };
       }, [page]);
 
-      // Run Bad-UX Strict Face Verification Check
       const runFaceVerification = () => {
         if (faceStatusType === "scanning" || faceStatusType === "success") return;
 
         setFaceStatusType("scanning");
-        setFaceStatus("Analyzing facial geometry & ambient luminance...");
+        setFaceStatus("Scanning facial geometry & lighting...");
 
         setTimeout(() => {
           const attemptNumber = faceAttempts + 1;
           setFaceAttempts(attemptNumber);
 
-          // Strict Bad UX failures on first 2 attempts, guaranteed pass on 3rd attempt
           if (attemptNumber === 1) {
             setFaceStatusType("error");
-            setFaceStatus("Face Not Aligned — Center your nose inside the purple frame.");
+            setFaceStatus("Face Not Aligned — Center your face inside the purple oval.");
           } else if (attemptNumber === 2) {
             setFaceStatusType("error");
             setFaceStatus("Lighting Too Low — Please Adjust Your Position and retry.");
           } else {
             setFaceStatusType("success");
-            setFaceStatus("Biometric Match Confirmed! Proceeding to payment...");
+            setFaceStatus("Biometric Match Confirmed! Moving to payment processing...");
             setTimeout(() => {
               stopWebcam();
               setSecondsLeft(30);
@@ -492,7 +466,6 @@
         }, 1400);
       };
 
-      // Mandatory 30-Second Countdown Effect
       useEffect(() => {
         if (page !== "processing") return;
 
@@ -509,7 +482,6 @@
         return () => clearInterval(timer);
       }, [page]);
 
-      // Complete Transaction at 0 seconds (with duplicate-submission guard)
       useEffect(() => {
         if (page === "processing" && secondsLeft === 0 && !isSubmittingTx) {
           setIsSubmittingTx(true);
@@ -538,7 +510,6 @@
         }
       }, [page, secondsLeft, isSubmittingTx, selectedMethod, amount]);
 
-      // Amount keypad handler
       const handleAmountKey = (key) => {
         setAmountError("");
         if (key === "DEL") {
@@ -576,194 +547,180 @@
       const selectedMethodObj = PAYMENT_METHODS.find((m) => m.id === selectedMethod);
 
       return (
-        <div className="w-full sm:w-[412px] h-[100dvh] sm:h-[844px] bg-gradient-to-b from-[#F7F5FF] via-[#F0ECFF] to-[#E8E0FF] sm:rounded-[42px] sm:border-[8px] sm:border-[#171936] sm:shadow-2xl flex flex-col overflow-hidden relative">
-          {/* Top Status Bar (Mobile Frame Aesthetic) */}
-          <div className="px-6 pt-3 pb-2 flex items-center justify-between text-[11px] font-semibold text-[#171936]/70 select-none shrink-0">
-            <span>9:41</span>
-            <div className="hidden sm:block w-24 h-5 bg-[#171936] rounded-full"></div>
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#39B982]"></span>
-              <span>5G • 100%</span>
-            </div>
-          </div>
+        <div className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8 flex flex-col">
+          {/* Top Navigation Header (Adapts seamlessly to Mobile & Desktop) */}
+          <header className="flex items-center justify-between gap-3 mb-6">
+            <button onClick={() => resetPaymentFlow("home")} className="text-left">
+              <MisspayLogo size="md" />
+            </button>
 
-          {/* Main Dynamic Content Viewport */}
-          <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6 flex flex-col">
+            <nav className="flex items-center gap-2">
+              <button
+                onClick={() => setPage("history")}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                  page === "history"
+                    ? "bg-[#7250D5] text-white shadow-sm"
+                    : "bg-white/85 text-[#171936] hover:bg-white border border-[#B9A5FF]/30"
+                }`}
+              >
+                <Icon name="history" className="w-4 h-4" />
+                <span>History ({transactions.length})</span>
+              </button>
+              <button
+                onClick={() => setPage("profile")}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                  page === "profile"
+                    ? "bg-[#7250D5] text-white shadow-sm"
+                    : "bg-white/85 text-[#171936] hover:bg-white border border-[#B9A5FF]/30"
+                }`}
+              >
+                <Icon name="user" className="w-4 h-4" />
+                <span className="hidden sm:inline">Profile</span>
+              </button>
+            </nav>
+          </header>
+
+          {/* Main Product Surface */}
+          <main className="flex-1 flex flex-col">
             {/* ==================== 1. HOME PAGE ==================== */}
             {page === "home" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
+              <div className="page-enter space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                  {/* Hero Balance & Pay Now Card */}
+                  <div className="lg:col-span-7 bg-gradient-to-br from-[#7250D5] via-[#8362E0] to-[#9B7EF4] rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-[#7250D5]/20 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-white/10 pointer-events-none"></div>
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full">
+                          MISSPAY Friction Engine
+                        </span>
+                        <Icon name="shield" className="w-5 h-5 text-white/90" />
+                      </div>
+                      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                        A Painful Journey to a Successful Payment.
+                      </h1>
+                      <p className="text-xs sm:text-sm text-white/80 mt-2">
+                        Simulated Balance: <strong className="text-white">¥ 14,820.50</strong>
+                      </p>
+                    </div>
+
+                    <div className="mt-7">
+                      <button
+                        onClick={() => startCheckout()}
+                        className="w-full sm:w-auto sm:px-8 py-3.5 bg-white text-[#7250D5] font-extrabold rounded-2xl shadow-md hover:bg-[#F0ECFF] active:scale-[0.98] transition"
+                      >
+                        Pay Now
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payment Channels Column */}
+                  <div className="lg:col-span-5 bg-white/90 backdrop-blur rounded-3xl p-5 sm:p-6 border border-[#B9A5FF]/40 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-sm font-extrabold text-[#171936] mb-1">
+                        Quick Payment Channels
+                      </h2>
+                      <p className="text-xs text-[#171936]/60 mb-4">
+                        Select a channel to start verification
+                      </p>
+                      <div className="space-y-3">
+                        {PAYMENT_METHODS.map((m) => (
+                          <button
+                            key={m.id}
+                            onClick={() => startCheckout(m.id)}
+                            className="w-full p-3.5 rounded-2xl bg-[#F7F5FF] hover:bg-[#F0ECFF] border border-[#B9A5FF]/30 hover:border-[#7250D5] transition flex items-center justify-between text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.color}`}>
+                                <Icon
+                                  name={m.id === "wechat" ? "chat" : m.id === "alipay" ? "wallet" : "card"}
+                                  className="w-5 h-5"
+                                />
+                              </div>
+                              <div>
+                                <div className="font-bold text-sm text-[#171936]">{m.name}</div>
+                                <div className="text-[11px] text-[#171936]/60">{m.subtitle}</div>
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-bold text-[#7250D5]">Select →</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 2. PAYMENT METHOD ==================== */}
+            {page === "method" && (
+              <div className="page-enter max-w-xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm space-y-6">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => resetPaymentFlow("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#7250D5]">
+                    Step 1 • Payment Method
+                  </span>
+                  <div className="w-9"></div>
+                </div>
+
                 <div>
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-6">
-                    <MisspayLogo size="md" />
-                    <button
-                      onClick={() => setPage("profile")}
-                      className="w-10 h-10 rounded-full bg-white/80 backdrop-blur border border-[#B9A5FF]/40 flex items-center justify-center text-[#7250D5] shadow-sm active:scale-95 transition"
-                      title="Profile"
-                    >
-                      <Icon name="user" className="w-5 h-5" />
-                    </button>
-                  </div>
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-[#171936]">
+                    Choose Your Payment Method
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#171936]/60 mt-1">
+                    You must select one method before entering the payment amount.
+                  </p>
+                </div>
 
-                  {/* Welcome Greeting */}
-                  <div className="mb-5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[#7250D5]">
-                      Welcome back, Valued User
-                    </p>
-                    <h1 className="text-2xl font-extrabold text-[#171936] mt-0.5">
-                      Ready to pay with friction?
-                    </h1>
-                  </div>
-
-                  {/* Primary Large Purple Rounded Card */}
-                  <div className="bg-gradient-to-br from-[#7250D5] via-[#8464E2] to-[#9E82F5] rounded-3xl p-6 text-white shadow-xl shadow-[#7250D5]/25 mb-6 relative overflow-hidden">
-                    <div className="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-white/10 pointer-events-none"></div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-medium bg-white/20 px-3 py-1 rounded-full">
-                        MISSPAY Shield Active
-                      </span>
-                      <Icon name="shield" className="w-5 h-5 text-white/90" />
-                    </div>
-                    <p className="text-xs text-white/80">Available Simulated Balance</p>
-                    <div className="text-3xl font-extrabold tracking-tight mt-1 mb-5">
-                      ¥ 14,820.50
-                    </div>
-                    <button
-                      onClick={() => startCheckout()}
-                      className="w-full py-3.5 bg-white text-[#7250D5] font-bold rounded-2xl shadow-md hover:bg-[#F0ECFF] active:scale-[0.98] transition flex items-center justify-center gap-2"
-                    >
-                      <span>Pay Now</span>
-                      <span className="text-xs font-semibold bg-[#F0ECFF] px-2 py-0.5 rounded-full">
-                        Start Checkout
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Quick Payment Channels */}
-                  <div className="mb-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-sm font-bold text-[#171936]">Supported Channels</h2>
-                      <span className="text-[11px] text-[#171936]/50">Tap to select</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2.5">
-                      {PAYMENT_METHODS.map((m) => (
-                        <button
-                          key={m.id}
-                          onClick={() => startCheckout(m.id)}
-                          className="bg-white/90 backdrop-blur rounded-2xl p-3.5 border border-[#B9A5FF]/30 shadow-sm hover:border-[#7250D5] active:scale-95 transition flex flex-col items-center text-center gap-2"
-                        >
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.color}`}>
+                <div className="space-y-3">
+                  {PAYMENT_METHODS.map((m) => {
+                    const active = selectedMethod === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedMethod(m.id)}
+                        className={`w-full p-4 rounded-2xl border-2 text-left transition flex items-center justify-between ${
+                          active
+                            ? "bg-[#F7F5FF] border-[#7250D5] shadow-sm"
+                            : "bg-white border-slate-200 hover:border-[#B9A5FF]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${m.color}`}>
                             <Icon
                               name={m.id === "wechat" ? "chat" : m.id === "alipay" ? "wallet" : "card"}
                               className="w-5 h-5"
                             />
                           </div>
-                          <span className="text-xs font-bold text-[#171936] leading-tight">{m.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Navigation Bar */}
-                <div className="bg-white/90 backdrop-blur-md rounded-2xl p-2 border border-[#B9A5FF]/30 shadow-md grid grid-cols-3 gap-1">
-                  <button
-                    onClick={() => setPage("home")}
-                    className="py-2 rounded-xl bg-[#F0ECFF] text-[#7250D5] font-bold text-xs flex flex-col items-center gap-1"
-                  >
-                    <Icon name="wallet" className="w-4 h-4" />
-                    <span>Home</span>
-                  </button>
-                  <button
-                    onClick={() => setPage("history")}
-                    className="py-2 rounded-xl text-[#171936]/70 hover:bg-[#F0ECFF]/50 font-semibold text-xs flex flex-col items-center gap-1"
-                  >
-                    <Icon name="history" className="w-4 h-4" />
-                    <span>History ({transactions.length})</span>
-                  </button>
-                  <button
-                    onClick={() => setPage("profile")}
-                    className="py-2 rounded-xl text-[#171936]/70 hover:bg-[#F0ECFF]/50 font-semibold text-xs flex flex-col items-center gap-1"
-                  >
-                    <Icon name="user" className="w-4 h-4" />
-                    <span>Profile</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ==================== 2. PAYMENT METHOD SELECTION ==================== */}
-            {page === "method" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <button
-                      onClick={() => resetPaymentFlow("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-bold text-[#171936]">Step 1 of 6 • Method</span>
-                    <div className="w-9"></div>
-                  </div>
-
-                  <h1 className="text-xl font-extrabold text-[#171936] mb-1">
-                    Select Payment Method
-                  </h1>
-                  <p className="text-xs text-[#171936]/60 mb-5">
-                    You must choose one funding source to initiate verification.
-                  </p>
-
-                  <div className="space-y-3">
-                    {PAYMENT_METHODS.map((m) => {
-                      const active = selectedMethod === m.id;
-                      return (
-                        <button
-                          key={m.id}
-                          onClick={() => setSelectedMethod(m.id)}
-                          className={`w-full p-4 rounded-2xl border-2 text-left transition flex items-center justify-between ${
-                            active
-                              ? "bg-white border-[#7250D5] shadow-md shadow-[#7250D5]/15"
-                              : "bg-white/80 border-transparent hover:bg-white"
+                          <div>
+                            <div className="font-bold text-sm text-[#171936]">{m.name}</div>
+                            <div className="text-xs text-[#171936]/60">{m.subtitle}</div>
+                          </div>
+                        </div>
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            active ? "border-[#7250D5] bg-[#7250D5] text-white" : "border-slate-300"
                           }`}
                         >
-                          <div className="flex items-center gap-3.5">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${m.color}`}>
-                              <Icon
-                                name={m.id === "wechat" ? "chat" : m.id === "alipay" ? "wallet" : "card"}
-                                className="w-6 h-6"
-                              />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-[#171936]">{m.name}</span>
-                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F0ECFF] text-[#7250D5]">
-                                  {m.badge}
-                                </span>
-                              </div>
-                              <p className="text-xs text-[#171936]/60 mt-0.5">{m.subtitle}</p>
-                            </div>
-                          </div>
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                              active ? "border-[#7250D5] bg-[#7250D5] text-white" : "border-slate-300"
-                            }`}
-                          >
-                            {active && <Icon name="check" className="w-3.5 h-3.5" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          {active && <Icon name="check" className="w-3.5 h-3.5" />}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
                   disabled={!selectedMethod}
                   onClick={() => setPage("amount")}
-                  className={`w-full py-4 rounded-2xl font-bold text-sm transition ${
+                  className={`w-full py-3.5 rounded-2xl font-bold text-sm transition ${
                     selectedMethod
-                      ? "bg-[#7250D5] text-white shadow-lg shadow-[#7250D5]/30 active:scale-[0.98]"
-                      : "bg-slate-300/70 text-slate-500 cursor-not-allowed"
+                      ? "bg-[#7250D5] text-white shadow-lg shadow-[#7250D5]/25 hover:bg-[#6140C4]"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   Continue
@@ -771,29 +728,30 @@
               </div>
             )}
 
-            {/* ==================== 3. PAYMENT AMOUNT PAGE ==================== */}
+            {/* ==================== 3. PAYMENT AMOUNT ==================== */}
             {page === "amount" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      onClick={() => resetPaymentFlow("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-bold text-[#171936]">Step 2 of 6 • Amount</span>
-                    <div className="w-9"></div>
-                  </div>
+              <div className="page-enter max-w-3xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={() => resetPaymentFlow("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#7250D5]">
+                    Step 2 • Enter Amount
+                  </span>
+                  <div className="w-9"></div>
+                </div>
 
-                  {/* Merchant & Amount Card */}
-                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#B9A5FF]/30 mb-4">
-                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="bg-[#F7F5FF] rounded-2xl p-5 border border-[#B9A5FF]/30">
+                    <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#B9A5FF]/20">
                       <div>
-                        <span className="text-[11px] font-semibold uppercase text-[#7250D5]">Merchant</span>
+                        <span className="text-[11px] font-bold uppercase text-[#7250D5]">Merchant</span>
                         <h2 className="text-base font-extrabold text-[#171936]">Global Mall</h2>
                       </div>
-                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F0ECFF] text-[#7250D5]">
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-white text-[#7250D5]">
                         {selectedMethodObj?.name}
                       </span>
                     </div>
@@ -808,65 +766,63 @@
                       </span>
                     </div>
                     {amountError && (
-                      <p className="text-xs font-semibold text-[#F05B69] mt-1">{amountError}</p>
+                      <p className="text-xs font-bold text-[#F05B69] mt-2">{amountError}</p>
                     )}
                   </div>
-                </div>
 
-                {/* Custom Numeric Keypad + Continue */}
-                <div>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "DEL"].map((k) => (
-                      <button
-                        key={k}
-                        onClick={() => handleAmountKey(k)}
-                        className="h-12 rounded-2xl bg-white hover:bg-[#F0ECFF] active:scale-95 font-bold text-lg text-[#171936] shadow-sm transition flex items-center justify-center"
-                      >
-                        {k === "DEL" ? <Icon name="delete" className="w-5 h-5 text-[#F05B69]" /> : k}
-                      </button>
-                    ))}
+                  <div>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "DEL"].map((k) => (
+                        <button
+                          key={k}
+                          onClick={() => handleAmountKey(k)}
+                          className="h-12 rounded-xl bg-[#F7F5FF] hover:bg-[#F0ECFF] active:scale-95 font-bold text-lg text-[#171936] border border-[#B9A5FF]/25 flex items-center justify-center transition"
+                        >
+                          {k === "DEL" ? <Icon name="delete" className="w-5 h-5 text-[#F05B69]" /> : k}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={validateAndProceedAmount}
+                      className="w-full py-3.5 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/25 hover:bg-[#6140C4] transition"
+                    >
+                      Continue
+                    </button>
                   </div>
-                  <button
-                    onClick={validateAndProceedAmount}
-                    className="w-full py-4 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/30 active:scale-[0.98] transition"
-                  >
-                    Continue
-                  </button>
                 </div>
               </div>
             )}
 
-            {/* ==================== 4. CORE FEATURE 1: RANDOMIZED PASSWORD KEYPAD ==================== */}
+            {/* ==================== 4. RANDOMIZED PASSWORD KEYPAD ==================== */}
             {page === "password" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      onClick={() => resetPaymentFlow("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-bold text-[#171936]">Step 3 of 6 • Security PIN</span>
-                    <div className="w-9"></div>
-                  </div>
+              <div className="page-enter max-w-3xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={() => resetPaymentFlow("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#7250D5]">
+                    Step 3 • Randomized PIN
+                  </span>
+                  <div className="w-9"></div>
+                </div>
 
-                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#B9A5FF]/30 text-center">
-                    <div className="w-11 h-11 rounded-2xl bg-[#F0ECFF] text-[#7250D5] mx-auto flex items-center justify-center mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="text-center md:text-left">
+                    <div className="w-11 h-11 rounded-2xl bg-[#F0ECFF] text-[#7250D5] flex items-center justify-center mb-3 mx-auto md:mx-0">
                       <Icon name="lock" className="w-5 h-5" />
                     </div>
-                    <h1 className="text-lg font-extrabold text-[#171936]">Enter 6-Digit Payment PIN</h1>
-                    <p className="text-xs text-[#171936]/60 mt-1">
-                      Keypad digits are randomized on every load & error to prevent shoulder-surfing.
+                    <h1 className="text-xl font-extrabold text-[#171936]">Enter 6-Digit Payment PIN</h1>
+                    <p className="text-xs sm:text-sm text-[#171936]/60 mt-1">
+                      Digits 0–9 shuffle every time this screen opens or fails.
                     </p>
-
-                    {/* Demo Helper Note */}
-                    <div className="mt-2.5 inline-block bg-[#F0ECFF] text-[#7250D5] text-[11px] font-semibold px-3 py-1 rounded-full">
+                    <div className="mt-3 inline-block bg-[#F0ECFF] text-[#7250D5] text-xs font-bold px-3 py-1 rounded-full">
                       Demo PIN: 123456
                     </div>
 
-                    {/* 6 PIN Slots */}
-                    <div className="grid grid-cols-6 gap-2 max-w-[260px] mx-auto my-5">
+                    <div className="grid grid-cols-6 gap-2 max-w-[280px] mx-auto md:mx-0 my-5">
                       {[0, 1, 2, 3, 4, 5].map((idx) => {
                         const filled = idx < pinInput.length;
                         return (
@@ -887,42 +843,38 @@
                     </div>
 
                     {pinError && (
-                      <p className="text-xs font-bold text-[#F05B69] animate-bounce">
-                        Password Incorrect — Keypad Re-Shuffled!
+                      <p className="text-xs font-bold text-[#F05B69]">
+                        Password Incorrect — Digits Re-Shuffled!
                       </p>
                     )}
                   </div>
-                </div>
 
-                {/* Randomized 0-9 Keypad */}
-                <div>
                   <div className="grid grid-cols-3 gap-2.5">
                     {shuffledDigits.slice(0, 9).map((digit) => (
                       <button
                         key={digit}
                         onClick={() => handleDigitPress(digit)}
-                        className="h-14 rounded-2xl bg-white hover:bg-[#F0ECFF] active:scale-95 font-extrabold text-xl text-[#171936] shadow-sm border border-[#B9A5FF]/20 transition"
+                        className="h-13 py-3 rounded-2xl bg-[#F7F5FF] hover:bg-[#F0ECFF] active:scale-95 font-extrabold text-xl text-[#171936] border border-[#B9A5FF]/25 transition"
                       >
                         {digit}
                       </button>
                     ))}
                     <button
                       onClick={shuffleKeypad}
-                      className="h-14 rounded-2xl bg-[#F0ECFF] text-[#7250D5] font-bold text-xs flex flex-col items-center justify-center active:scale-95 transition"
-                      title="Shuffle Again"
+                      className="py-3 rounded-2xl bg-[#F0ECFF] text-[#7250D5] font-bold text-xs flex flex-col items-center justify-center active:scale-95 transition"
                     >
                       <Icon name="refresh" className="w-4 h-4 mb-0.5" />
                       <span>Shuffle</span>
                     </button>
                     <button
                       onClick={() => handleDigitPress(shuffledDigits[9])}
-                      className="h-14 rounded-2xl bg-white hover:bg-[#F0ECFF] active:scale-95 font-extrabold text-xl text-[#171936] shadow-sm border border-[#B9A5FF]/20 transition"
+                      className="py-3 rounded-2xl bg-[#F7F5FF] hover:bg-[#F0ECFF] active:scale-95 font-extrabold text-xl text-[#171936] border border-[#B9A5FF]/25 transition"
                     >
                       {shuffledDigits[9]}
                     </button>
                     <button
                       onClick={() => setPinInput((p) => p.slice(0, -1))}
-                      className="h-14 rounded-2xl bg-white hover:bg-[#F05B69]/10 text-[#F05B69] font-bold flex items-center justify-center shadow-sm active:scale-95 transition"
+                      className="py-3 rounded-2xl bg-[#F7F5FF] hover:bg-[#F05B69]/10 text-[#F05B69] font-bold flex items-center justify-center active:scale-95 transition"
                     >
                       <Icon name="delete" className="w-5 h-5" />
                     </button>
@@ -931,119 +883,114 @@
               </div>
             )}
 
-            {/* ==================== 5. CORE FEATURE 2: THREE-ROUND CAPTCHA ==================== */}
+            {/* ==================== 5. THREE-ROUND CAPTCHA ==================== */}
             {page === "captcha" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <button
-                      onClick={() => resetPaymentFlow("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-[#7250D5] text-white">
-                      Round {captchaRound + 1}/3
-                    </span>
-                    <div className="w-9"></div>
-                  </div>
-
-                  {/* Prompt Banner */}
-                  <div className="bg-[#7250D5] text-white rounded-2xl p-4 mb-3 shadow-md">
-                    <p className="text-[11px] uppercase tracking-wider text-white/80 font-semibold">
-                      Human Verification Challenge
-                    </p>
-                    <h1 className="text-base font-extrabold mt-0.5">
-                      {CAPTCHA_ROUNDS[captchaRound].prompt}
-                    </h1>
-                    <p className="text-[11px] text-white/85 mt-1">
-                      {CAPTCHA_ROUNDS[captchaRound].hint}
-                    </p>
-                  </div>
-
-                  {/* 3x3 Image Grid */}
-                  <div className="grid grid-cols-3 gap-2 bg-white p-2.5 rounded-2xl shadow-sm border border-[#B9A5FF]/30">
-                    {CAPTCHA_ROUNDS[captchaRound].tiles.map((tile, idx) => {
-                      const isSelected = selectedTiles.includes(idx);
-                      return (
-                        <button
-                          key={tile.id}
-                          onClick={() => toggleTile(idx)}
-                          className={`relative aspect-square rounded-xl overflow-hidden border-[3px] transition ${
-                            isSelected
-                              ? "border-[#7250D5] scale-[0.95] shadow-md"
-                              : "border-transparent hover:opacity-90"
-                          }`}
-                        >
-                          <CaptchaTileGraphic type={tile.type} />
-                          <span className="absolute top-1 left-1 text-[9px] font-bold bg-black/50 text-white px-1.5 py-0.5 rounded">
-                            #{idx + 1}
-                          </span>
-                          {isSelected && (
-                            <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-[#7250D5] text-white flex items-center justify-center shadow">
-                              <Icon name="check" className="w-3 h-3" />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {captchaError && (
-                    <div className="mt-3 p-3 rounded-xl bg-[#F05B69]/15 border border-[#F05B69]/40 flex items-center justify-between gap-2">
-                      <p className="text-xs font-bold text-[#F05B69]">{captchaError}</p>
-                      <button
-                        onClick={() => {
-                          setSelectedTiles([]);
-                          setCaptchaError("");
-                        }}
-                        className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[#F05B69] text-white"
-                      >
-                        Try Again
-                      </button>
-                    </div>
-                  )}
+              <div className="page-enter max-w-2xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => resetPaymentFlow("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-extrabold px-3 py-1 rounded-full bg-[#7250D5] text-white">
+                    Round {captchaRound + 1}/3
+                  </span>
+                  <div className="w-9"></div>
                 </div>
 
-                <button
-                  onClick={verifyCaptchaRound}
-                  className="w-full py-4 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/30 active:scale-[0.98] transition mt-3"
-                >
-                  Verify ({selectedTiles.length} Selected)
-                </button>
+                <div className="bg-[#7250D5] text-white rounded-2xl p-4">
+                  <h1 className="text-base sm:text-lg font-extrabold">
+                    {CAPTCHA_ROUNDS[captchaRound].prompt}
+                  </h1>
+                  <p className="text-xs text-white/80 mt-0.5">
+                    {CAPTCHA_ROUNDS[captchaRound].hint}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3 max-w-md mx-auto">
+                  {CAPTCHA_ROUNDS[captchaRound].tiles.map((tile, idx) => {
+                    const isSelected = selectedTiles.includes(idx);
+                    return (
+                      <button
+                        key={tile.id}
+                        onClick={() => toggleTile(idx)}
+                        className={`relative aspect-square rounded-xl overflow-hidden border-[3px] transition ${
+                          isSelected
+                            ? "border-[#7250D5] scale-[0.96] shadow-md"
+                            : "border-slate-200 hover:opacity-95"
+                        }`}
+                      >
+                        <CaptchaTileGraphic type={tile.type} />
+                        <span className="absolute top-1 left-1 text-[10px] font-bold bg-black/55 text-white px-1.5 py-0.5 rounded">
+                          #{idx + 1}
+                        </span>
+                        {isSelected && (
+                          <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full bg-[#7250D5] text-white flex items-center justify-center">
+                            <Icon name="check" className="w-3 h-3" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {captchaError && (
+                  <div className="p-3 rounded-xl bg-[#F05B69]/15 border border-[#F05B69]/40 flex items-center justify-between gap-2 max-w-md mx-auto">
+                    <p className="text-xs font-bold text-[#F05B69]">{captchaError}</p>
+                    <button
+                      onClick={() => {
+                        setSelectedTiles([]);
+                        setCaptchaError("");
+                      }}
+                      className="shrink-0 text-xs font-bold px-3 py-1 rounded-lg bg-[#F05B69] text-white"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+
+                <div className="max-w-md mx-auto">
+                  <button
+                    onClick={verifyCaptchaRound}
+                    className="w-full py-3.5 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/25 hover:bg-[#6140C4] transition"
+                  >
+                    Verify ({selectedTiles.length} Selected)
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* ==================== 6. CORE FEATURE 3: LIVE USER WEBCAM FACE RECOGNITION ==================== */}
+            {/* ==================== 6. REAL-USER WEBCAM FACE RECOGNITION ==================== */}
             {page === "face" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <button
-                      onClick={() => resetPaymentFlow("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-bold text-[#171936]">Step 5 of 6 • Face Verification</span>
-                    <div className="w-9"></div>
-                  </div>
+              <div className="page-enter max-w-3xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={() => resetPaymentFlow("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#7250D5]">
+                    Step 5 • Face Verification
+                  </span>
+                  <div className="w-9"></div>
+                </div>
 
-                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#B9A5FF]/30 text-center">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-1.5 mb-2">
                       <span
                         className={`w-2 h-2 rounded-full ${
                           cameraActive ? "bg-[#39B982] animate-pulse" : "bg-amber-500"
                         }`}
                       ></span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#7250D5]">
-                        {cameraActive ? "Live Front Camera Active" : "Simulated Camera Feed"}
+                      <span className="text-xs font-bold text-[#7250D5]">
+                        {cameraActive ? "Live User Camera Connected" : "Fallback Camera Mode"}
                       </span>
                     </div>
-                    <h1 className="text-lg font-extrabold text-[#171936]">Face Verification</h1>
 
-                    {/* Circular Live Camera Viewport */}
-                    <div className="relative w-56 h-56 mx-auto my-4 rounded-full overflow-hidden border-[5px] border-[#7250D5] shadow-inner bg-[#171936]">
+                    <div className="relative w-60 h-60 rounded-full overflow-hidden border-[5px] border-[#7250D5] bg-[#171936] shadow-inner">
                       {!cameraFallback ? (
                         <video
                           ref={videoRef}
@@ -1058,18 +1005,15 @@
                       ) : (
                         <div
                           style={{ transform: `translate(${faceOffset.x}px, ${faceOffset.y}px)` }}
-                          className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900 text-white transition-transform duration-200"
+                          className="w-full h-full flex flex-col items-center justify-center bg-slate-900 text-white transition-transform duration-200"
                         >
-                          <div className="w-20 h-24 rounded-full bg-[#B9A5FF]/30 border-2 border-[#B9A5FF] flex items-center justify-center mb-1">
-                            <Icon name="user" className="w-10 h-10 text-white" />
-                          </div>
-                          <span className="text-[10px] text-white/70">Fallback Avatar Feed</span>
+                          <Icon name="user" className="w-12 h-12 text-[#B9A5FF]" />
+                          <span className="text-[11px] text-white/70 mt-1">No Camera Detected</span>
                         </div>
                       )}
 
-                      {/* Face Alignment Oval Overlay */}
                       <div
-                        className={`absolute inset-4 rounded-full border-2 border-dashed pointer-events-none transition-colors ${
+                        className={`absolute inset-4 rounded-full border-2 border-dashed pointer-events-none ${
                           faceStatusType === "error"
                             ? "border-[#F05B69]"
                             : faceStatusType === "success"
@@ -1078,19 +1022,16 @@
                         }`}
                       ></div>
 
-                      {/* Animated Biometric Scan Line */}
                       {faceStatusType === "scanning" && (
                         <div className="absolute left-0 right-0 h-1 bg-[#B9A5FF] shadow-[0_0_12px_#B9A5FF] animate-scan"></div>
                       )}
                     </div>
 
-                    {/* Interactive Position Fine-Tune Controls */}
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <span className="text-[11px] font-semibold text-[#171936]/60">Frame Offset:</span>
+                    <div className="flex items-center gap-1.5 mt-3">
                       {[
                         { label: "←", dx: -10, dy: 0 },
                         { label: "↑", dx: 0, dy: -10 },
-                        { label: "Center", dx: 0, dy: 0, reset: true },
+                        { label: "Center", reset: true },
                         { label: "↓", dx: 0, dy: 10 },
                         { label: "→", dx: 10, dy: 0 }
                       ].map((btn) => (
@@ -1101,16 +1042,22 @@
                               btn.reset ? { x: 0, y: 0 } : { x: prev.x + btn.dx, y: prev.y + btn.dy }
                             )
                           }
-                          className="px-2.5 py-1 rounded-lg bg-[#F0ECFF] text-[#7250D5] text-xs font-bold active:scale-95"
+                          className="px-2.5 py-1 rounded-lg bg-[#F0ECFF] text-[#7250D5] text-xs font-bold hover:bg-[#E3DCFF]"
                         >
                           {btn.label}
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Verification Status Pill */}
+                  <div className="space-y-4">
+                    <h1 className="text-xl font-extrabold text-[#171936]">Face Verification</h1>
+                    <p className="text-xs sm:text-sm text-[#171936]/60">
+                      Align your face with the guide frame and start biometric check.
+                    </p>
+
                     <div
-                      className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 ${
+                      className={`p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2.5 ${
                         faceStatusType === "error"
                           ? "bg-[#F05B69]/15 text-[#F05B69]"
                           : faceStatusType === "success"
@@ -1130,135 +1077,117 @@
                       />
                       <span>{faceStatus}</span>
                     </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2 mt-3">
-                  <button
-                    onClick={runFaceVerification}
-                    disabled={faceStatusType === "scanning" || faceStatusType === "success"}
-                    className="w-full py-4 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/30 active:scale-[0.98] transition disabled:opacity-60"
-                  >
-                    {faceStatusType === "error"
-                      ? `Retry Verification (Attempt ${faceAttempts + 1}/3)`
-                      : faceStatusType === "scanning"
-                      ? "Scanning Biometrics..."
-                      : "Start Verification"}
-                  </button>
+                    <button
+                      onClick={runFaceVerification}
+                      disabled={faceStatusType === "scanning" || faceStatusType === "success"}
+                      className="w-full py-3.5 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/25 hover:bg-[#6140C4] transition disabled:opacity-60"
+                    >
+                      {faceStatusType === "error"
+                        ? `Retry Verification (Attempt ${faceAttempts + 1}/3)`
+                        : faceStatusType === "scanning"
+                        ? "Scanning..."
+                        : "Start Verification"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* ==================== 7. PAYMENT PROCESSING — MANDATORY 30 SECONDS ==================== */}
+            {/* ==================== 7. 30-SECOND PROCESSING ==================== */}
             {page === "processing" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
+              <div className="page-enter max-w-xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm text-center space-y-5">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => resetPaymentFlow("home")}
-                    className="text-xs font-bold text-[#F05B69] bg-white px-3 py-1.5 rounded-xl shadow-sm"
+                    className="text-xs font-bold text-[#F05B69] bg-[#F05B69]/10 px-3 py-1.5 rounded-xl"
                   >
                     Cancel & Reset
                   </button>
-                  <span className="text-xs font-bold text-[#7250D5]">Step 6 of 6 • Settlement</span>
+                  <span className="text-xs font-extrabold text-[#7250D5]">Step 6 • Settlement</span>
                 </div>
 
-                <div className="bg-white rounded-3xl p-6 shadow-md border border-[#B9A5FF]/30 text-center my-auto">
-                  {/* Animated Ring + Live 30s Countdown */}
-                  <div className="relative w-32 h-32 mx-auto mb-5 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border-4 border-[#F0ECFF]"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-[#7250D5] border-t-transparent animate-spin"></div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-3xl font-extrabold text-[#171936]">{secondsLeft}s</span>
-                      <span className="text-[10px] font-semibold uppercase text-[#7250D5]">Remaining</span>
-                    </div>
+                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border-4 border-[#F0ECFF]"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-[#7250D5] border-t-transparent animate-spin"></div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-3xl font-extrabold text-[#171936]">{secondsLeft}s</span>
+                    <span className="text-[10px] font-bold uppercase text-[#7250D5]">Remaining</span>
                   </div>
+                </div>
 
+                <div>
                   <h1 className="text-xl font-extrabold text-[#171936]">Payment Processing</h1>
-                  <p className="text-xs font-bold text-[#F05B69] mt-1.5">
+                  <p className="text-xs font-bold text-[#F05B69] mt-1">
                     Please Do Not Close This Page
                   </p>
-                  <p className="text-xs text-[#171936]/60 mt-2 leading-relaxed">
-                    MISSPAY is performing a mandatory 30-second multi-node risk clearance. Skipping is disabled for your protection.
-                  </p>
+                </div>
 
-                  {/* Transaction Summary Box */}
-                  <div className="mt-5 bg-[#F0ECFF]/70 rounded-2xl p-4 text-left space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Merchant</span>
-                      <span className="font-bold text-[#171936]">Global Mall</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Amount</span>
-                      <span className="font-extrabold text-[#7250D5]">¥ {amount}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Payment Method</span>
-                      <span className="font-bold text-[#171936]">{selectedMethodObj?.name}</span>
-                    </div>
+                <div className="bg-[#F7F5FF] rounded-2xl p-4 text-xs space-y-2 text-left border border-[#B9A5FF]/25">
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Merchant</span>
+                    <span className="font-bold">Global Mall</span>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full h-2 bg-[#F0ECFF] rounded-full overflow-hidden mt-5">
-                    <div
-                      className="h-full bg-[#7250D5] transition-all duration-1000 ease-linear"
-                      style={{ width: `${((30 - secondsLeft) / 30) * 100}%` }}
-                    ></div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Amount</span>
+                    <span className="font-extrabold text-[#7250D5]">¥ {amount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Payment Method</span>
+                    <span className="font-bold">{selectedMethodObj?.name}</span>
                   </div>
                 </div>
 
-                <div className="text-center text-[11px] text-[#171936]/50 font-medium">
-                  Exiting now will cancel payment and reset all verifications.
+                <div className="w-full h-2.5 bg-[#F0ECFF] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#7250D5] transition-all duration-1000 ease-linear"
+                    style={{ width: `${((30 - secondsLeft) / 30) * 100}%` }}
+                  ></div>
                 </div>
               </div>
             )}
 
-            {/* ==================== 8. PAYMENT SUCCESSFUL PAGE ==================== */}
+            {/* ==================== 8. PAYMENT SUCCESS ==================== */}
             {page === "success" && latestTx && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-4">
-                <div className="bg-white rounded-3xl p-6 shadow-md border border-[#B9A5FF]/30 text-center my-auto">
-                  <div className="w-20 h-20 rounded-full bg-[#39B982]/15 text-[#39B982] mx-auto flex items-center justify-center mb-4">
-                    <Icon name="check" className="w-10 h-10" />
-                  </div>
+              <div className="page-enter max-w-xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm text-center space-y-5">
+                <div className="w-16 h-16 rounded-full bg-[#39B982]/15 text-[#39B982] mx-auto flex items-center justify-center">
+                  <Icon name="check" className="w-8 h-8" />
+                </div>
+                <div>
                   <h1 className="text-2xl font-extrabold text-[#171936]">Payment Successful!</h1>
-                  <p className="text-xs text-[#171936]/60 mt-1">
-                    You survived the MISSPAY verification gauntlet.
-                  </p>
+                  <div className="text-3xl font-extrabold text-[#7250D5] mt-2">¥ {latestTx.amount}</div>
+                </div>
 
-                  <div className="text-3xl font-extrabold text-[#7250D5] my-5">
-                    ¥ {latestTx.amount}
+                <div className="bg-[#F7F5FF] rounded-2xl p-4 space-y-2 text-xs text-left border border-[#B9A5FF]/25">
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Merchant</span>
+                    <span className="font-bold">{latestTx.merchant}</span>
                   </div>
-
-                  <div className="bg-[#F0ECFF]/60 rounded-2xl p-4 space-y-2.5 text-xs text-left">
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Merchant</span>
-                      <span className="font-bold text-[#171936]">{latestTx.merchant}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Payment Method</span>
-                      <span className="font-bold text-[#171936]">{latestTx.method}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Transaction ID</span>
-                      <span className="font-mono font-bold text-[#171936]">{latestTx.id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Timestamp</span>
-                      <span className="font-semibold text-[#171936]">{latestTx.date}</span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Method</span>
+                    <span className="font-bold">{latestTx.method}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Transaction ID</span>
+                    <span className="font-mono font-bold">{latestTx.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Time</span>
+                    <span className="font-semibold">{latestTx.date}</span>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => setPage("receipt")}
-                    className="w-full py-3.5 rounded-2xl bg-[#F0ECFF] text-[#7250D5] font-bold text-sm hover:bg-[#E4DCFF] transition flex items-center justify-center gap-2"
+                    className="flex-1 py-3.5 rounded-2xl bg-[#F0ECFF] text-[#7250D5] font-bold text-sm flex items-center justify-center gap-2"
                   >
                     <Icon name="receipt" className="w-4 h-4" />
                     <span>View Receipt</span>
                   </button>
                   <button
                     onClick={() => resetPaymentFlow("home")}
-                    className="w-full py-4 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/30 transition"
+                    className="flex-1 py-3.5 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/25"
                   >
                     Back to Home
                   </button>
@@ -1266,147 +1195,111 @@
               </div>
             )}
 
-            {/* ==================== 8B. DIGITAL RECEIPT MODAL PAGE ==================== */}
+            {/* ==================== 8B. RECEIPT ==================== */}
             {page === "receipt" && latestTx && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      onClick={() => setPage("success")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-sm font-bold text-[#171936]">Official Voucher</span>
-                    <div className="w-9"></div>
+              <div className="page-enter max-w-xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm space-y-5">
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
+                  <MisspayLogo size="md" />
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#39B982]/15 text-[#39B982]">
+                    PAID
+                  </span>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-[#171936]/60">Paid to {latestTx.merchant}</p>
+                  <p className="text-3xl font-extrabold text-[#171936] mt-1">¥ {latestTx.amount}</p>
+                </div>
+                <div className="space-y-2.5 text-xs border-t border-dashed border-slate-200 pt-4">
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Transaction No.</span>
+                    <span className="font-mono font-bold">{latestTx.id}</span>
                   </div>
-
-                  <div className="bg-white rounded-3xl p-6 shadow-md border border-[#B9A5FF]/40 relative">
-                    <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-4 mb-4">
-                      <MisspayLogo size="md" />
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#39B982]/15 text-[#39B982]">
-                        SETTLED
-                      </span>
-                    </div>
-
-                    <div className="text-center py-2">
-                      <p className="text-xs text-[#171936]/60">Total Paid to {latestTx.merchant}</p>
-                      <p className="text-3xl font-extrabold text-[#171936] mt-1">¥ {latestTx.amount}</p>
-                    </div>
-
-                    <div className="border-t border-dashed border-slate-200 pt-4 mt-4 space-y-3 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-[#171936]/60">Transaction No.</span>
-                        <span className="font-mono font-bold">{latestTx.id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#171936]/60">Funding Channel</span>
-                        <span className="font-bold">{latestTx.method}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#171936]/60">Security Clearance</span>
-                        <span className="font-bold text-[#7250D5]">PIN + 3x CAPTCHA + Biometric</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#171936]/60">Date & Time</span>
-                        <span className="font-semibold">{latestTx.date}</span>
-                      </div>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Payment Method</span>
+                    <span className="font-bold">{latestTx.method}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Timestamp</span>
+                    <span className="font-semibold">{latestTx.date}</span>
                   </div>
                 </div>
-
                 <button
                   onClick={() => resetPaymentFlow("home")}
-                  className="w-full py-4 rounded-2xl bg-[#7250D5] text-white font-bold text-sm shadow-lg shadow-[#7250D5]/30"
+                  className="w-full py-3.5 rounded-2xl bg-[#7250D5] text-white font-bold text-sm"
                 >
                   Back to Home
                 </button>
               </div>
             )}
 
-            {/* ==================== 9. TRANSACTION HISTORY PAGE ==================== */}
+            {/* ==================== 9. TRANSACTION HISTORY ==================== */}
             {page === "history" && (
-              <div className="page-enter flex-1 flex flex-col pt-2">
-                <div className="flex items-center justify-between mb-5">
+              <div className="page-enter max-w-3xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
                   <button
                     onClick={() => setPage("home")}
-                    className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
                   >
                     <Icon name="arrowLeft" className="w-5 h-5" />
                   </button>
-                  <span className="text-base font-extrabold text-[#171936]">Transaction History</span>
+                  <h1 className="text-lg font-extrabold text-[#171936]">Transaction History</h1>
                   <div className="w-9"></div>
                 </div>
 
-                <div className="space-y-3 flex-1 overflow-y-auto no-scrollbar">
+                <div className="space-y-3">
                   {transactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="bg-white rounded-2xl p-4 shadow-sm border border-[#B9A5FF]/30 flex items-center justify-between"
+                      className="p-4 rounded-2xl bg-[#F7F5FF] border border-[#B9A5FF]/30 flex items-center justify-between"
                     >
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-extrabold text-sm text-[#171936]">{tx.merchant}</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#39B982]/15 text-[#39B982]">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#39B982]/15 text-[#39B982]">
                             {tx.status}
                           </span>
                         </div>
                         <p className="text-xs text-[#171936]/60 mt-1">
                           {tx.method} • {tx.date}
                         </p>
-                        <p className="text-[10px] font-mono text-[#171936]/40 mt-0.5">{tx.id}</p>
+                        <p className="text-[11px] font-mono text-[#171936]/45 mt-0.5">{tx.id}</p>
                       </div>
-                      <div className="text-right">
-                        <span className="text-base font-extrabold text-[#7250D5]">-¥{tx.amount}</span>
-                      </div>
+                      <span className="text-base font-extrabold text-[#7250D5]">-¥{tx.amount}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* ==================== 10. PROFILE PAGE ==================== */}
+            {/* ==================== 10. PROFILE ==================== */}
             {page === "profile" && (
-              <div className="page-enter flex-1 flex flex-col justify-between pt-2">
-                <div>
-                  <div className="flex items-center justify-between mb-5">
-                    <button
-                      onClick={() => setPage("home")}
-                      className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-[#171936] shadow-sm"
-                    >
-                      <Icon name="arrowLeft" className="w-5 h-5" />
-                    </button>
-                    <span className="text-base font-extrabold text-[#171936]">Account & Rules</span>
-                    <div className="w-9"></div>
-                  </div>
+              <div className="page-enter max-w-xl w-full mx-auto bg-white/95 rounded-3xl p-6 sm:p-8 border border-[#B9A5FF]/40 shadow-sm space-y-5">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setPage("home")}
+                    className="w-9 h-9 rounded-xl bg-[#F0ECFF] flex items-center justify-center text-[#7250D5]"
+                  >
+                    <Icon name="arrowLeft" className="w-5 h-5" />
+                  </button>
+                  <h1 className="text-lg font-extrabold text-[#171936]">Profile & Settings</h1>
+                  <div className="w-9"></div>
+                </div>
 
-                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#B9A5FF]/30 text-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-[#7250D5] text-white text-2xl font-extrabold mx-auto flex items-center justify-center mb-3">
-                      M
-                    </div>
-                    <h2 className="font-extrabold text-base text-[#171936]">MISSPAY Demo User</h2>
-                    <p className="text-xs text-[#7250D5] font-semibold mt-0.5">
-                      "Your Money. Our Rules."
-                    </p>
+                <div className="bg-[#F7F5FF] rounded-2xl p-4 space-y-2.5 text-xs border border-[#B9A5FF]/25">
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Demo PIN</span>
+                    <span className="font-mono font-bold text-[#7250D5]">123456</span>
                   </div>
-
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#B9A5FF]/30 space-y-3 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Default Test PIN</span>
-                      <span className="font-mono font-bold text-[#7250D5]">123456</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">CAPTCHA Challenge</span>
-                      <span className="font-bold">3 Mandatory Rounds</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Biometric Sensor</span>
-                      <span className="font-bold text-[#39B982]">WebRTC Live Camera</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#171936]/60">Settlement Delay</span>
-                      <span className="font-bold text-[#F05B69]">30 Seconds Fixed</span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">CAPTCHA Rounds</span>
+                    <span className="font-bold">3 Rounds</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Camera</span>
+                    <span className="font-bold text-[#39B982]">Live Webcam (getUserMedia)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#171936]/60">Processing Time</span>
+                    <span className="font-bold text-[#F05B69]">30 Seconds</span>
                   </div>
                 </div>
 
@@ -1416,13 +1309,13 @@
                     setTransactions(INITIAL_HISTORY);
                     setPage("home");
                   }}
-                  className="w-full py-3.5 rounded-2xl bg-white text-[#F05B69] border border-[#F05B69]/30 font-bold text-xs"
+                  className="w-full py-3 rounded-2xl bg-[#F05B69]/10 text-[#F05B69] font-bold text-xs"
                 >
-                  Reset Demo Transaction History
+                  Reset Transaction History
                 </button>
               </div>
             )}
-          </div>
+          </main>
         </div>
       );
     }
